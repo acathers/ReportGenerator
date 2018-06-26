@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package org.build.ReportGenerator;
 
 import java.io.File;
 import java.io.FileInputStream;
