@@ -1,13 +1,14 @@
-package org.build.ReportGenerator;
-
 import java.io.File;
+
 import java.io.IOException;
 import java.time.LocalDate;
 
 import org.apache.poi.EncryptedDocumentException;
+
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.CellType;
+
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,32 +16,50 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 public class AncillaryMixTracker {
 
+  public static final int MONTHLY_TRACKER_SHEET_NUMBER = 3;
+
   Workbook wb;
   private int startRow;
   private int startCol;
+  private LocalDate currentDate = LocalDate.now();
 
   public AncillaryMixTracker(String filePath)
       throws EncryptedDocumentException, InvalidFormatException, IOException {
 
     wb = WorkbookFactory.create(new File(filePath));
-    if(setStartPositionForMonthlyTracker(wb)) {
-        System.out.println(startRow);
-        System.out.println(startCol);
+
+    Cell cell = getCell(1, 1);
+    System.out.println(cell.toString());
+
+    if (setStartPositionForMonthlyTracker(wb)) {
+      System.out.println(startRow);
+      System.out.println(startCol);
     }
   }
 
-  public boolean setStartPositionForMonthlyTracker(
-      Workbook wb) { // sets values for startRow and startCol and returns a boolean if cell is found
-    LocalDate currentDate = LocalDate.now();
-    Sheet sheet = wb.getSheetAt(2);
-    DataFormatter dataFormatter = new DataFormatter();
+  public Cell getCell(
+      int columnNumber, int rowNumber) { // returns a cell at a specified row and column.
+    int sheetNumber = 3;
+    Sheet sheet = wb.getSheetAt(sheetNumber);
+    Row row = sheet.getRow(rowNumber);
+    Cell cell = row.getCell(columnNumber);
+    return cell;
+  }
+
+  public boolean setStartPositionForMonthlyTracker(Workbook wb) {
+
+    Sheet sheet = wb.getSheetAt(MONTHLY_TRACKER_SHEET_NUMBER);
+    CellType type;
 
     for (Row row : sheet) {
       for (Cell cell : row) {
-        if (dataFormatter.formatCellValue(cell).equals(currentDate.getDayOfMonth())) {
-          startRow = cell.getRowIndex();
-          startCol = cell.getColumnIndex();
-          return true;
+        type = cell.getCellTypeEnum();
+        if (type == CellType.NUMERIC) {
+          if (cell.getNumericCellValue() == currentDate.getDayOfMonth()) {
+            startRow = cell.getRowIndex();
+            startCol = cell.getColumnIndex();
+            return true;
+          }
         }
       }
     }
